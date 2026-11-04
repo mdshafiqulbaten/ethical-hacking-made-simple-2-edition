@@ -1,0 +1,50 @@
+      # triage.py - first look at a file: hash, size, entropy, print‐
+      able strings
+      import hashlib, math, re, sys
+      from collections import Counter
+
+      data = open(sys.argv[1], "rb").read()
+      counts = Counter(data)
+      entropy = -sum(c / len(data) * math.log2(c / len(data)) for c in
+      counts.values())
+      print("sha256 :", hashlib.sha256(data).hexdigest())
+      print("size   :", len(data), "bytes")
+      print(f"entropy: {entropy:.2f} bits per byte")
+      for s in re.findall(rb"[ -~]{6,}", data)[:10]:
+          print("string :", s.decode())
+
+      $ python3 triage.py samples/report_tool.txt
+      $ python3 triage.py samples/clean_notes.txt
+
+  Real output:
+
+      sha256 :
+      d27bdfbd28acd301e9e6c54f9e4f35d092363c524cf2b1199d2ffd6799267da3
+      size   : 104 bytes
+      entropy: 5.14 bits per byte
+      string : RIVERSIDE-TRAINING-SAMPLE
+      string : cmd.exe /c whoami
+      string : powershell -enc SQBFAFgA
+      string : http://c2.riverside.example/beacon
+
+      sha256 :
+      16cc83b45aed9daf48347d6a106f61bbcce7a084c85b0211f0ddd6a3be872081
+      string : Meeting notes: patch Tuesday, update the asset
+      inventory.
+
+  Read the result. Neither file was executed. The first file's extracted
+  strings alone are already enough to warrant deeper attention: a
+  command-shell invocation, an encoded PowerShell flag, and a URL
+
+        FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+formatted like a command-and-control beacon. The second file's
+single extracted string is an ordinary meeting note. Note the SHA-
+256 hash of each file in your evidence log — it is how you would rec‐
+ognize this exact file again, and how you would share it with a
+threat-intelligence lookup without sharing the file itself.
+
+L A B 2 3. 2 · W R I T E A N D R U N A YA R A R U L E
+
+Machine: Kali · Time: 25 minutes · Evidence file: rule.yar ,
+yara_scan.py , yara-scan.txt

@@ -1,0 +1,122 @@
+# header_check.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+       # header_check.py - the quick checks you do before you trust a
+       suspicious email
+       import re, sys
+       from email import message_from_file
+       from email.utils import parseaddr
+
+       msg = message_from_file(open(sys.argv[1]))
+       _, sender = parseaddr(msg["From"])
+       _, reply = parseaddr(msg["Reply-To"] or "")
+       auth = msg.get("Authentication-Results", "")
+       body = msg.get_payload()
+
+         FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+ print("From domain      :", sender.split("@")[1])
+ print("Reply-To domain :", reply.split("@")[1] if reply else "
+ (none)")
+ flags = []
+ if reply and reply.split("@")[1] != sender.split("@")[1]:
+     flags.append("Reply-To domain differs from From domain")
+ for check in ("spf", "dkim", "dmarc"):
+     m = re.search(check + r"=(\w+)", auth)
+     print(f"{check.upper():16}:", m.group(1) if m else "miss‐
+ ing")
+     if not m or m.group(1) != "pass":
+          flags.append(f"{check.upper()} did not pass")
+ if re.search(r"(?i)today|urgent|immediately|on hold",
+ msg["Subject"] + body):
+     flags.append("urgency language")
+ print("Flags:")
+ for f in flags:
+     print(" -", f)
+
+ $ python3 header_check.py phish.eml
+
+Real output:
+
+ From domain     : riverside-hr-portal.example
+ Reply-To domain : mail-collect.example
+ SPF             : fail
+ DKIM            : none
+ DMARC           : fail
+ Flags:
+   - Reply-To domain differs from From domain
+   - SPF did not pass
+   - DKIM did not pass
+   - DMARC did not pass
+   - urgency language
+
+Read the result. Five separate flags on one short message is a
+strong, specific signal — not a vague feeling that something looks
+"off." This is the kind of check real mail security gateways run auto‐
+matically at scale; writing it yourself in under 20 lines shows how
+approachable the underlying logic is.
+
+L A B 2 1 .3 · W R I T E U S E R - FAC I N G G U I DA N C E , N OT A T E C H N I CA L
+REPORT
+
+Machine: notebook · Time: 15 minutes · Evidence file: phishing-
+guidance.md
+
+                        ETHICAL HACKING MADE SIMPLE
+
+      A technical finding full of SPF and DKIM terminology is the wrong
+      deliverable for the people who actually receive these messages.
+      Rewrite Lab 21.2's findings as three short, plain-language tips a non-
+      technical staff member could use the next time a similar message
+      arrives, without any jargon.
+
+      What good looks like: each tip describes something a reader can ac‐
+      tually check by looking at the message (who it's really from, where a
+      link really goes, whether they're being rushed), not a term they
+      would need training to understand.
+
+      REALITY CHECK
+
+      Authorized phishing simulations (sending test messages to an
+      organization's own staff to measure and train against this threat)
+      exist as a distinct, well-established service, with its own written
+      consent, legal review, and HR coordination. This book does not
+      cover constructing or sending such campaigns; that is work for an
+      engagement with its own dedicated scope and sign-off, separate
+      from the technical assessment skills covered elsewhere in this book.
+
+Key Takeaways
+      Phishing exploits human decision-making, which is why purely
+      technical defenses are not enough on their own.
+      SPF, DKIM, and DMARC are the standard technical checks for a
+      spoofed sender, and a short script can check all three.
+      A mismatched Reply-To address and urgency language are both
+      strong, checkable signals.
+      Guidance aimed at non-technical staff should use plain language,
+      not security jargon.
+
+Reflection Questions
+1. Why is a mismatched Reply-To address such a strong signal, even
+      when the From address looks legitimate?
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+2. What does it mean that a message shows dkim=none rather than
+   dkim=fail ?
+
+3. Why is phishing-simulation work treated as a separate, specially
+   scoped engagement rather than something covered in this
+   chapter's labs?
+
+Next you will review the security posture of cloud and container environ‐
+ments, which carry their own versions of the same access-control lessons
+from Chapter 12.
+
+         PA R T 5
+
+  Modern Platforms,
+Detection, and Delivery
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS

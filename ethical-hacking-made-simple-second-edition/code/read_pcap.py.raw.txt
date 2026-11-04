@@ -1,0 +1,111 @@
+ # read_pcap.py - summarize a pcap the way you would in Wireshark
+ import sys
+ from scapy.all import rdpcap, TCP, IP, Raw
+
+ for i, pkt in enumerate(rdpcap(sys.argv[1]), 1):
+     if IP not in pkt or TCP not in pkt:
+         continue
+     flags = str(pkt[TCP].flags)
+     line = f"{i:2} {pkt[IP].src}:{pkt[TCP].sport} ->
+
+                            ETHICAL HACKING MADE SIMPLE
+
+      {pkt[IP].dst}:{pkt[TCP].dport} flags={flags:3}"
+          if Raw in pkt:
+              first = bytes(pkt[Raw].load).split(b"\r\n")
+      [0].split(b"\n")[0].decode(errors="replace")
+              line += f' "{first[:50]}"'
+          print(line)
+
+      $ sudo ~/venv/bin/python3 loopback_capture.py
+      $ python3 read_pcap.py lab-http.pcap
+
+     Real output (port numbers differ each run):
+
+       1 127.0.0.1:50484 -> 127.0.0.1:5000              flags=S
+       2 127.0.0.1:5000 -> 127.0.0.1:50484              flags=SA
+       3 127.0.0.1:50484 -> 127.0.0.1:5000              flags=A
+       4 127.0.0.1:50484 -> 127.0.0.1:5000              flags=PA       "GET /search?
+      q=lab HTTP/1.1"
+       5 127.0.0.1:5000 -> 127.0.0.1:50484              flags=A
+       6 127.0.0.1:5000 -> 127.0.0.1:50484              flags=PA       "HTTP/1.1 200
+      OK"
+       7 127.0.0.1:50484 -> 127.0.0.1:5000              flags=A
+       8 127.0.0.1:5000 -> 127.0.0.1:50484              flags=PA       "<h2>Results
+      for: lab</h2>"
+       9 127.0.0.1:50484 -> 127.0.0.1:5000              flags=A
+      10 127.0.0.1:50484 -> 127.0.0.1:5000              flags=FA
+      11 127.0.0.1:5000 -> 127.0.0.1:50484              flags=FA
+      12 127.0.0.1:50484 -> 127.0.0.1:5000              flags=A
+
+     Read the result. Packets 1 to 3 are the handshake (S, SA, A). Packet 4
+     carries the HTTP request, packet 6 the status line, packet 8 the
+     page. Packets 10 to 12 close the connection (FA means FIN and ACK).
+     This is exactly the picture in Figure 4. Notice that the request and
+     the page travel in plain text: anyone who can see the network can
+     read them. That is why Chapter 9 matters.
+
+     If it differs: if you see 0 packets, run as root and check that the app
+     is running on port 5000. On some systems the loopback interface
+     shows each packet once; the script handles both.
+
+     L A B 4.3 · C O M PA R E N A M E A N D A D D R E S S R E AC H A B I L I T Y
+
+     Machine: Kali · Time: 10 minutes · Evidence file: name-vs-
+     address.txt
+
+         FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+   $ ping -c 2 192.168.56.20
+   $ ping -c 2 ubuntu.lab
+   $ echo "192.168.56.20 ubuntu.lab" | sudo tee -a /etc/hosts
+   $ ping -c 2 ubuntu.lab
+
+ Illustrative output:
+
+   2 packets transmitted, 2 received          (by address: works)
+   ping: ubuntu.lab: Name or service not known (by name: fails)
+   2 packets transmitted, 2 received          (after the hosts
+   entry)
+
+ Read the result. The address works but the name does not, so the
+ network is fine and name resolution is the missing piece. Adding the
+ name to /etc/hosts is a local fix. Record which fix you used so you
+ can undo it.
+
+ QUICK CHALLENGE
+
+ A scan reports port 8080 as filtered. A colleague says "so nothing is
+ running there." Is that safe to conclude?
+
+ Suggested answer: No. Filtered means the scanner got no useful an‐
+ swer, often because a firewall dropped the packets. A service may be
+ running behind the firewall. The honest statement is "I could not
+ tell," followed by a plan to check from another viewpoint, such as the
+ server itself.
+
+Key Takeaways
+ A subnet and a scope card are the same idea: a range you may
+ touch. Check membership with code, not by eye.
+ An address finds a machine; a port finds a program. A service is a
+ program listening on a port.
+ Open, closed, and filtered are three different answers to one
+ question.
+ A request and its reply cross the network in plain text unless
+ something encrypts them.
+
+                      ETHICAL HACKING MADE SIMPLE
+
+     One successful test proves one thing. Do not stretch it.
+
+Reflection Questions
+1. In Lab 4.2, which packets are the handshake, and which carry
+   data?
+2. Why can an address work while a name fails?
+3. A host does not answer ping. List two reasons that are not "the
+     host is off."
+
+Next you will turn these manual steps into small Python tools that organize
+your evidence.
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS

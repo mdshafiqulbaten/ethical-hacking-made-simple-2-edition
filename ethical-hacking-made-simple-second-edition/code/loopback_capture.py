@@ -1,0 +1,28 @@
+# loopback_capture.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+ # loopback_capture.py - capture real packets while curl talks to
+ the lab app
+ # run as root so Scapy may sniff: sudo ~/venv/bin/python3
+ loopback_capture.py
+ import subprocess, time, threading
+ from scapy.all import sniff, wrpcap, TCP
+
+ packets = []
+ def capture():
+     got = sniff(iface="lo", timeout=4)
+     for p in got:
+         if TCP in p and 5000 in (p[TCP].sport, p[TCP].dport):
+              if not packets or bytes(p) != bytes(packets[-1]):            #
+ loopback shows each packet twice
+                  packets.append(p)
+
+ t = threading.Thread(target=capture); t.start(); time.sleep(1)
+ subprocess.run(["curl", "-s", "-o", "/dev/null",
+ "http://127.0.0.1:5000/search?q=lab"])
+ t.join()
+ wrpcap("lab-http.pcap", packets)
+ print(f"captured {len(packets)} packets -> lab-http.pcap")

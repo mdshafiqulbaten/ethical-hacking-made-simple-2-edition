@@ -1,0 +1,95 @@
+ # yara_scan.py - compile a rule and scan a folder (pip install
+ yara-python)
+ import sys
+ from pathlib import Path
+ import yara
+
+                           ETHICAL HACKING MADE SIMPLE
+
+      rules = yara.compile(filepath=sys.argv[1])
+      for path in sorted(Path(sys.argv[2]).glob("*")):
+          hits = rules.match(str(path))
+          print(f"{path.name:18}", [h.rule for h in hits] or "no
+      match")
+          for h in hits:
+              for s in h.strings:
+                  print("   matched string", s.identifier, "x",
+      len(s.instances))
+
+      $ python3 yara_scan.py rule.yar samples
+
+  Real output:
+
+      clean_notes.txt    no match
+      report_tool.txt    ['Riverside_Training_Sample']
+         matched string $marker x 1
+         matched string $cmd x 1
+         matched string $enc x 1
+         matched string $url x 1
+
+  Read the result. A rule written specifically for this one training
+  marker correctly matches only the file that contains it, and the clean
+  notes file produces no match at all. A rule like this is deliberately
+  narrow — written to demonstrate the mechanism, not to detect real
+  malware families, which require rules developed from genuine sam‐
+  ples and tested for false positives at a scale this lab cannot responsi‐
+  bly reproduce.
+
+  L A B 2 3.3 · D E C I D E , A N D W R I T E T H E D E C I S I O N
+
+  Machine: notebook · Time: 15 minutes · Evidence file: triage-
+  decision.md
+
+  Using Lab 23.1 and 23.2's results for report_tool.txt , write a one-
+  paragraph triage decision using the flowchart's language: what was
+  observed (hash, entropy, specific strings, the YARA match), and the
+  recommendation (escalate to isolated dynamic analysis, handled by
+  personnel and infrastructure specifically authorized and equipped
+  for that — not by continuing to examine the file yourself on a gen‐
+  eral-purpose machine).
+
+         FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+  What good looks like: the decision is based entirely on what was
+  observed statically, names the next step as a handoff to a properly
+  isolated process rather than an action you take yourself, and does
+  not speculate about capabilities the strings alone do not establish.
+
+  REALITY CHECK
+
+  Real dynamic malware analysis happens inside specialized, fully net‐
+  work-isolated sandboxes built and maintained specifically for that
+  purpose, often with no outbound internet access at all and exten‐
+  sive monitoring, run by analysts trained in that discipline. It is a dis‐
+  tinct specialty from the general penetration-testing and assessment
+  skills this book covers, and nothing in this chapter is a substitute for
+  that infrastructure or training.
+
+Key Takeaways
+  Static triage — hash, size, entropy, strings, pattern matching —
+  answers most early questions without ever running a file.
+  A file's SHA-256 hash is how you track and share its identity with‐
+  out handling the file itself.
+  A YARA rule's narrowness (what it is written to match) matters as
+  much as whether it matches.
+  Escalating to dynamic analysis is a handoff to specialized, isolated
+  infrastructure, not a next step to take on a general-purpose
+  machine.
+
+Reflection Questions
+1. Why does entropy alone, without the extracted strings, not tell
+   you whether a file is malicious?
+2. What specifically made the YARA rule in Lab 23.2 match only one
+  of the two sample files?
+
+                      ETHICAL HACKING MADE SIMPLE
+
+3. Why is "run it in a regular virtual machine and see what happens"
+   not an acceptable substitute for proper dynamic analysis
+   infrastructure?
+
+Next you will look at the detection side: reading packet captures, logs, and
+alerts to notice what malware like this would actually leave behind on a
+network.
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS

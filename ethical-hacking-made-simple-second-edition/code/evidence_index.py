@@ -1,0 +1,110 @@
+# evidence_index.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+      # evidence_index.py - list every file in an evidence folder as a
+      Markdown table
+      # usage: python3 evidence_index.py ./Riverside-Capstone -o evi‐
+      dence-index.md
+      import argparse, hashlib, time
+      from pathlib import Path
+
+      def main():
+          ap = argparse.ArgumentParser()
+          ap.add_argument("folder"); ap.add_argument("-o", "--output",
+      required=True)
+          args = ap.parse_args()
+          lines = ["| File | Size (bytes) | Modified (UTC) | SHA-256
+      (first 12) |",
+                   "|:--|--:|:--|:--|"]
+          for p in sorted(Path(args.folder).rglob("*")):
+              if p.is_file() and p.name != Path(args.output).name:
+                  st = p.stat()
+                  when = time.strftime("%Y-%m-%d %H:%M",
+      time.gmtime(st.st_mtime))
+                  digest = hashlib.sha256(p.read_bytes()).hexdigest()
+      [:12]
+                  lines.append(f"| {p.relative_to(args.folder)} |
+      {st.st_size} | {when} | {digest} |")
+          Path(args.output).write_text("\n".join(lines) + "\n")
+          print(f"indexed {len(lines) - 2} files -> {args.output}")
+
+      if __name__ == "__main__":
+          main()
+
+       FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+ $ python3 log_timeline.py evidence/ssh-events.txt -o ssh-
+ timeline.csv
+ $ cat ssh-timeline.csv
+ $ python3 evidence_index.py evidence -o evidence-index.md
+
+Real output:
+
+ 7 events written, 5 failed logins
+ time,host,event,user,source_ip
+ Oct 14 22:10:01,ubuntu01,Failed password,test,192.168.56.10
+ Oct 14 22:10:03,ubuntu01,Failed password,ubuntu,192.168.56.10
+ Oct 14 22:10:06,ubuntu01,Failed password,root,192.168.56.10
+ Oct 14 22:10:09,ubuntu01,Failed password,admin,192.168.56.10
+ Oct 14 22:10:12,ubuntu01,Failed password,admin,192.168.56.10
+ Oct 14 22:10:34,ubuntu01,Accepted password,admin,192.168.56.10
+ Oct 14 22:12:10,ubuntu01,Accepted
+ publickey,analyst,192.168.56.11
+ indexed 2 files -> evidence-index.md
+
+Read the result. Five failed logins across four account names, then a
+successful login as admin from the same address 22 seconds after
+the last failure. That is a pattern worth investigating, not proof of
+compromise: it could be an authorized test. You will turn this into an
+alert in Chapter 24.
+
+                            ETHICAL HACKING MADE SIMPLE
+
+     L A B 5.6 · P OW E R S H E L L R E T U R N S O B J E C T S ( W I N D OW S )
+
+     Machine: Windows Server VM, PowerShell · Time: 10 minutes ·
+     Evidence file: services.csv
+
+     On Windows, ask for named properties instead of copying text from
+     the screen:
+
+      PS> Get-Service | Where-Object Status -eq 'Running' |
+            Select-Object Name, DisplayName, StartType |
+            Sort-Object Name | Export-Csv services.csv -
+      NoTypeInformation
+      PS> Import-Csv services.csv | Select-Object -First 3
+
+     Illustrative output (your services will differ):
+
+      Name          DisplayName                           StartType
+      ----          -----------                           ---------
+      BFE           Base Filtering Engine                 Automatic
+      Dhcp          DHCP Client                           Automatic
+      Dnscache      DNS Client                            Automatic
+
+     Read the result. The CSV holds stable fields another analyst can sort
+     and compare. This is why structured output beats screenshots
+     alone. (I did not run this lab; check the property names against your
+     Windows version.)
+
+ QUICK CHALLENGE
+
+ Your script scans a list of hosts read from a file. One line in the file is
+ 192.168.57.20 . What should the script do, and why?
+
+ Suggested answer: Refuse it, say so in the output, and continue with
+ the rest (or stop, depending on your rules of engagement).
+ 192.168.57.20 is outside the approved 192.168.56.0/24 , and a
+ script that scans whatever is in a file will eventually scan the wrong
+ thing.
+
+Key Takeaways
+     Scripts are evidence-producing work products: check scope, vali‐
+     date input, log, test.
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+   Put a scope guard in front of any automated test.

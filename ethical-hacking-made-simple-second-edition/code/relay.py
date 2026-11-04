@@ -1,0 +1,149 @@
+# relay.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+  # relay.py - a tiny TCP port forward, to see what a pivot or
+  tunnel really is
+  # usage: python3 relay.py LISTEN_PORT TARGET_HOST TARGET_PORT
+  import socket, sys, threading
+
+  def pipe(src, dst):
+      try:
+           while data := src.recv(4096):
+               dst.sendall(data)
+      except OSError:
+           pass
+      finally:
+           dst.close()
+
+  listen_port, host, port = int(sys.argv[1]), sys.argv[2],
+  int(sys.argv[3])
+  server = socket.socket()
+  server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  server.bind(("127.0.0.1", listen_port))
+  server.listen()
+  print(f"relaying 127.0.0.1:{listen_port} -> {host}:{port}",
+  flush=True)
+  while True:
+      client, _ = server.accept()
+      upstream = socket.create_connection((host, port))
+      threading.Thread(target=pipe, args=(client, upstream),
+  daemon=True).start()
+      threading.Thread(target=pipe, args=(upstream, client),
+  daemon=True).start()
+
+  $ python3 relay.py 8080 127.0.0.1 5000 &
+  $ curl -s "http://127.0.0.1:8080/search?q=lab"
+
+ Real output:
+
+  relaying 127.0.0.1:8080 -> 127.0.0.1:5000
+  <h2>Results for: lab</h2>
+  <li>Alice: lab plan</li>
+
+                         ETHICAL HACKING MADE SIMPLE
+
+  Read the result. The request went to port 8080, and the response
+  came from the app on port 5000, which never saw the client directly
+  — only the relay did. Fewer than 20 lines of Python implement the
+  core of what every pivoting tool does. This is the plain-language
+  mechanism behind an SSH tunnel: SSH's version is encrypted and
+  authenticated, but the forwarding idea is exactly this.
+
+  L A B 1 9. 2 · U S E S S H ' S B U I LT- I N LO CA L P O R T F O R WA R D
+
+  Machine: Kali → Ubuntu VM · Time: 20 minutes · Evidence file: ssh-
+  forward.txt
+
+      $ ssh -L 8081:127.0.0.1:5000 analyst@192.168.56.20 -N
+
+      Part                                     Meaning
+      -L 8081:127.0.0.1:5000                   Forward local port 8081 to port
+                                               5000, as seen from the far end of
+                                               the SSH connection
+      -N                                       Do not run a remote shell, just hold
+                                               the tunnel open
+
+  Illustrative output (requires a running SSH server and the practice
+  app on the Ubuntu VM, which I could not set up together in my
+  build environment):
+
+      (no output; the connection holds open until you press Ctrl+C)
+
+  In a second terminal: curl -s "http://127.0.0.1:8081/search?
+  q=lab" would return the same page Lab 19.1 returned, but now en‐
+  crypted between your machine and the Ubuntu VM, with no sepa‐
+  rate relay program needed.
+
+  Read the result. The command accomplishes exactly what Lab 19.1's
+  script did, using a tool already present on nearly every Linux and
+  macOS system and built into many SSH clients on Windows. This is
+  why administrators should treat an unexpected -L or -D flag in SSH
+  command history or logs with the same attention as any other sign
+  of lateral movement.
+
+        FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+L A B 1 9.3 · U N D E R S TA N D A S O C K S P R OX Y C O N C E P T UA L LY,
+W I T H O U T R U N N I N G O N E AGA I N S T A L I V E TA R G E T
+
+Machine: notebook · Time: 15 minutes · Evidence file: socks-
+notes.md
+
+  $ ssh -D 1080 analyst@192.168.56.20 -N
+
+The -D flag turns the SSH connection into a general-purpose
+SOCKS proxy: instead of forwarding one fixed destination, it accepts
+a destination from whatever tool connects to it (for example, a
+browser configured to proxy through 127.0.0.1:1080 ), and relays
+each request from the far end of the SSH connection.
+
+Write, in your own words, the practical difference between -L (Lab
+19.2, one fixed destination) and -D (any destination the client re‐
+quests). Note why a SOCKS proxy through a compromised or piv‐
+oted host is a common way real intrusions reach a second, other‐
+wise unreachable network segment, and why detecting unusual out‐
+bound SSH connections from a server that should have none is a
+meaningful monitoring control.
+
+What good looks like: your notes explain the mechanism clearly
+enough that you could recognize it from a log entry, without need‐
+ing a second network segment set up to prove it to yourself.
+
+QUICK CHALLENGE
+
+A log shows a server-to-server SSH connection with -D 1080 that
+nobody on the operations team can explain. What should happen
+next?
+
+Suggested answer: Treat it as a potential pivot and investigate imme‐
+diately: identify who or what initiated the connection, what it has
+been used to reach, and whether it is still active. This is exactly the
+finding category Chapter 24's log-based hunting builds toward.
+
+                     ETHICAL HACKING MADE SIMPLE
+
+Key Takeaways
+   Every pivot or tunnel is fundamentally a relay: listen, accept,
+   forward.
+   SSH's -L forwards one fixed destination; -D turns the connection
+   into a general-purpose SOCKS proxy.
+   Pivoting is how an intrusion that starts in one network segment
+   reaches another it could not otherwise touch.
+   An unexplained SSH forwarding flag in logs or history is a mean‐
+   ingful detection signal.
+
+Reflection Questions
+1. What is the core difference between a local port forward ( -L ) and
+   a SOCKS proxy ( -D )?
+2. Why did the relay script in Lab 19.1 never need to understand
+   HTTP to forward an HTTP request?
+3. Why should an unexplained outbound SSH connection from a
+   server be treated as worth investigating?
+
+Next you will step away from wired networks and test the wireless security
+of your own access point.
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS

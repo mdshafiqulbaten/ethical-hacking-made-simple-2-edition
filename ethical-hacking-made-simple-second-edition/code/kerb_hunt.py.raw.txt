@@ -1,0 +1,98 @@
+      # kerb_hunt.py - flag one account requesting many RC4 service
+      tickets in a few seconds
+      import csv
+      from collections import defaultdict
+
+      by_account = defaultdict(list)
+      for row in csv.DictReader(open("events4769.csv")):
+          if row["ticket_encryption"] == "RC4":
+              by_account[row["account"]].append(row["service"])
+      for account, services in by_account.items():
+          if len(set(services)) >= 3:
+              print(f"REVIEW: {account} requested RC4 tickets for
+      {len(set(services))} services")
+              for s in sorted(set(services)):
+                  print("   ", s)
+
+      $ python3 kerb_hunt.py
+
+       FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+Real output:
+
+ REVIEW: svc-backup requested RC4 tickets for 4 services
+     CIFS/files01.riverside.example
+     HTTP/web01.riverside.example
+     MSSQLSvc/db01.riverside.example
+     MSSQLSvc/db02.riverside.example
+
+Read the result. svc-backup requesting four different services' tick‐
+ets within three seconds, all using the weaker encryption, is the pat‐
+tern worth asking about: is this a legitimate scheduled backup job
+running on its normal schedule, or something that needs investiga‐
+tion? The honest answer is that this script alone cannot tell you — it
+surfaces the pattern; a human analyst with context about what svc-
+backup is supposed to do makes the call.
+
+                          ETHICAL HACKING MADE SIMPLE
+
+  L A B 2 4. 4 · W R I T E A D E T E C T I O N R U L E A S A S I G M A- S T Y L E
+  DESCRIPTION
+
+  Machine: notebook · Time: 15 minutes · Evidence file: detection-
+  rule.md
+
+  Sigma is a widely used, vendor-neutral format for describing a de‐
+  tection rule as text so it can be shared and translated into different
+  platforms' own query languages. Write Lab 24.2's rule in this plain
+  style:
+
+      title: Successful login following multiple failures from the
+      same source
+      logsource: category=authentication
+      detection:
+        failures:
+          event_type: Failed
+        success_after_failures:
+          event_type: Accepted
+          condition: failures | count() >= 5 by source_ip within 60s,
+      followed by success from same source_ip
+      level: medium
+      false_positives:
+        - A user who mistypes a password several times and then
+      succeeds
+
+  What good looks like: your version names the condition, the time
+  window, the severity level, and at least one realistic false-positive
+  scenario, which is what separates a usable detection rule from a
+  vague description of "suspicious activity."
+
+Key Takeaways
+  Detection logic looks for relationships between events, not single
+  events in isolation.
+  A rule's threshold and time window are design decisions that
+  should be written down and justified.
+  The same packet-reading skill from Chapter 4 applies to detec‐
+  tion; the difference is asking "is this normal?" instead of "what
+  does this mean technically?"
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+   A pattern like Kerberoasting's RC4 ticket spread needs human
+   context (what is this account supposed to do?) to resolve, not just
+   the script's output.
+   Sigma-style rule descriptions make a detection logic shareable
+   and reviewable.
+
+Reflection Questions
+1. Why does a single failed login rarely justify an alert, while a pat‐
+   tern of five does?
+2. What realistic, non-malicious explanation could account for Lab
+   24.3's svc-backup pattern?
+3. Why is writing down a rule's false-positive scenario as important
+   as writing down what it detects?
+
+The final chapter brings every part of this book together into one capstone
+exercise and a portfolio you can show.
+
+                        ETHICAL HACKING MADE SIMPLE

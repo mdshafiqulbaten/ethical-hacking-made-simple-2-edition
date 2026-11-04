@@ -1,0 +1,56 @@
+# wifi_review.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+                      ETHICAL HACKING MADE SIMPLE
+
+      # wifi_review.py - review a survey of nearby access points (list
+      from your own site survey)
+      import csv
+      from collections import defaultdict
+
+      OUR_BSSIDS = {"aa:bb:cc:00:00:01", "aa:bb:cc:00:00:02",
+      "aa:bb:cc:00:00:03"}
+      seen = defaultdict(list)
+      for ap in csv.DictReader(open("wifi_scan.csv")):
+          seen[ap["ssid"]].append(ap)
+          if ap["security"] in ("Open", "WEP"):
+              print(f"WEAK SECURITY: {ap['ssid']} ({ap['bssid']}) uses
+      {ap['security']}")
+      for ssid, aps in seen.items():
+          if ssid.startswith("Riverside"):
+              for ap in aps:
+                  if ap["bssid"] not in OUR_BSSIDS:
+                      print(f"POSSIBLE ROGUE AP: '{ssid}' from unknown
+      device {ap['bssid']}")
+
+      $ python3 wifi_review.py
+
+  Real output:
+
+      WEAK SECURITY: Riverside-Lab (aa:bb:cc:00:00:03) uses WEP
+      WEAK SECURITY: Riverside-Staff (de:ad:be:ef:00:09) uses Open
+      WEAK SECURITY: CoffeeCorner (11:22:33:44:55:66) uses Open
+      POSSIBLE ROGUE AP: 'Riverside-Staff' from unknown device
+      de:ad:be:ef:00:09
+
+  Read the result. Two separate problems appear: Riverside-Lab le‐
+  gitimately uses the broken WEP protocol (the known access point's
+  own device, just an outdated setting — a straightforward fix) and a
+  second, unknown device is broadcasting the name Riverside-Staff
+  with no security at all. CoffeeCorner is outside the organization's
+  own naming and is correctly ignored by the rogue check, since it is
+  simply a neighboring, unrelated network with nothing to do with
+  this assessment. The rogue finding is the one to escalate immedi‐
+  ately, because it may be an active attempt to intercept staff connec‐
+  tions right now.
+
+           FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+  L A B 2 0.3 · W R I T E T H E E S CA L AT I O N M E S S AG E F O R A L I V E R O G U E
+  AP FINDING
+
+  Machine: notebook · Time: 10 minutes · Evidence file: rogue-ap-
+  escalation.md

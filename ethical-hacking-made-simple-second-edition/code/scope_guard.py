@@ -1,0 +1,52 @@
+# scope_guard.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+  # scope_guard.py - refuse any target that is not inside the ap‐
+  proved ranges
+  # usage: python3 scope_guard.py 192.168.56.20 8.8.8.8
+  import ipaddress, sys
+
+  APPROVED = [ipaddress.ip_network("192.168.56.0/24")]     # copy
+  from your scope card
+
+  def in_scope(target):
+      ip = ipaddress.ip_address(target)                    # raises
+  ValueError if malformed
+      return any(ip in net for net in APPROVED)
+
+  if __name__ == "__main__":
+      bad = 0
+      for target in sys.argv[1:]:
+          try:
+              ok = in_scope(target)
+          except ValueError:
+              print(f"REFUSED {target} (not a valid IP ad‐
+  dress)"); bad += 1; continue
+          print(f"{'OK     ' if ok else 'REFUSED'} {target}")
+          bad += not ok
+      sys.exit(1 if bad else 0)
+
+  $ python3 scope_guard.py 192.168.56.20 192.168.57.20 8.8.8.8
+  not-an-ip; echo "exit code: $?"
+
+ Real output:
+
+  OK       192.168.56.20
+  REFUSED 192.168.57.20
+  REFUSED 8.8.8.8
+  REFUSED not-an-ip (not a valid IP address)
+  exit code: 1
+
+                             ETHICAL HACKING MADE SIMPLE
+
+     Read the result. Anything outside the card, and anything mal‐
+     formed, is refused, and the exit code (1) lets other scripts stop. Use
+     this as the first line of every automated test from now on.
+
+     L A B 5. 2 · A R E A D - O N LY L I N U X I N V E N TO RY S C R I P T
+
+     Machine: Ubuntu VM · Time: 15 minutes · Evidence file: inventory-
+     <date>.txt

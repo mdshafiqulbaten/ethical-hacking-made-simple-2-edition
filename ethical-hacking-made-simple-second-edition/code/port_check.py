@@ -1,0 +1,123 @@
+# port_check.py
+# Auto-extracted from "Ethical Hacking Made Simple (Second Edition)" by Md Shafiqul Baten Sumon.
+# Extraction method: text pulled from the book's PDF and, for Python
+# files, auto-repaired for indentation. Syntax check: NOT CONFIRMED - please review.
+# Review before running, especially if the status above is not "passed".
+
+      # port_check.py - TCP connect check of a few ports, with a scope
+      guard
+      # usage: python3 port_check.py 127.0.0.1 22 80 5000 5001
+      import ipaddress, socket, sys
+
+      APPROVED = [ipaddress.ip_network("127.0.0.0/8"),
+      ipaddress.ip_network("192.168.56.0/24")]
+
+      def check(host, port, timeout=0.5):
+          with socket.socket() as s:
+              s.settimeout(timeout)
+              code = s.connect_ex((host, port))
+          return "open" if code == 0 else "closed/filtered"
+
+      host, ports = sys.argv[1], [int(p) for p in sys.argv[2:]]
+      ip = ipaddress.ip_address(host)
+      if not any(ip in n for n in APPROVED):
+          raise SystemExit(f"REFUSED {host}: not in approved ranges")
+      for p in ports:
+          print(f"{host}:{p:<5} {check(host, p)}")
+
+      $ python3 port_check.py 127.0.0.1 22 80 5000 5001
+      $ python3 port_check.py 8.8.8.8 53
+
+     Real output (with the Riverside Notes apps running on 5000 and
+     5001):
+
+      127.0.0.1:22    closed/filtered
+      127.0.0.1:80    closed/filtered
+      127.0.0.1:5000 open
+      127.0.0.1:5001 open
+      REFUSED 8.8.8.8: not in approved ranges
+
+     Read the result. A successful connection means something is listen‐
+     ing. The script cannot tell closed from filtered because both fail to
+     connect, which is exactly the limit you met in Chapter 4. The second
+     command shows the guard working: the script never touched
+     8.8.8.8 .
+
+        FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+L A B 6. 4 · M A P A D O M A I N YO U OW N ( PA S S I V E )
+
+Machine: Kali · Time: 20 minutes · Evidence file: domain-map.txt
+
+Use a domain you personally own, or example.com , which exists for
+documentation. Do not do this against a domain you have no per‐
+mission to assess; even passive work should have a reason.
+
+ $ dig +short example.com A
+ $ dig +short example.com MX
+ $ dig +short example.com NS
+
+Illustrative output (records change over time; run it yourself):
+
+ 93.184.216.34
+ 0 .
+ a.iana-servers.net.
+ b.iana-servers.net.
+
+Read the result. A records give addresses, MX the mail servers (here
+a "null MX" meaning the domain accepts no mail), NS the name
+servers. Each line becomes a row in the asset register, tagged
+source: DNS, date, unverified.
+
+                              ETHICAL HACKING MADE SIMPLE
+
+     L A B 6. 5 · B U I L D A N A S S E T R E G I S T E R
+
+     Machine: notebook or spreadsheet · Time: 20 minutes · Evidence
+     file: asset-register.csv
+
+     Combine your notebook into one table. Use it as the single source
+     for later chapters.
+
+       asset,type,owner,how_known,in_scope,status
+       192.168.56.20,server,Riverside Skills Lab,"client doc +
+       ping",yes,confirmed up
+       192.168.56.30,server,Riverside Skills Lab,"client doc",yes,not
+       yet checked
+       192.168.56.77,unknown,unknown,"host discovery",NO - ask
+       client,STOP and report
+
+     What good looks like: every asset has an owner, a source, and a
+     scope decision. The third row shows the right reaction to a surprise:
+     record it, mark it out of scope, and ask. Do not test it to "find out
+     what it is."
+
+     QUICK CHALLENGE
+
+     A certificate log lists old-portal.riverside.example . It is not in
+     your scope card. A teammate wants to port-check it "just to see."
+     What do you say?
+
+     Suggested answer: Not yet. Add it to the register as found passively,
+     not in scope, and ask the client whether they own it and want it
+     tested. Checking first, asking later, is how courthouse stories begin.
+
+Key Takeaways
+     Passive work reads what exists; active work sends traffic and
+     needs scope.
+     Every register row records how you know and what is unverified.
+     No reply is not the same as not there.
+     An unexpected host is a finding to report, not a target to explore.
+
+          FROM SAFE CYBER RANGES TO PROFESSIONAL REPORTS
+
+Reflection Questions
+1. Why does a certificate-log entry not prove a server exists?
+2. Which columns in the asset register protect you if a client asks
+   "why did you test that?"
+3. What does -sn change compared with a normal Nmap scan?
+
+With a trustworthy list of assets, you can ask what each one is running,
+which is where Nmap comes in.
+
+                           ETHICAL HACKING MADE SIMPLE
